@@ -24,11 +24,17 @@ if (params.help) {
     exit 0
 }
 
-params.rawfolder = "$baseDir/DATA/raw/"
 params.reads = "$baseDir/DATA/raw/*.{R1,R2}.fastq"
 params.outdir = "$baseDir/OUT/"
 params.FW_primer = "CCAGCAGCYGCGGTAAN" // -g - 5’ adapter  (front), forwardPrimer
 params.RV_primer = "CCGTCAATTCNTTTRAGT" //["CCGTCAATTCNTTTRAGT", "CCGTCAATTTCTTTGAGT", "CCGTCTATTCCTTTGANT"] // -G
+
+params.QUALITY_THRESHOLD = 18  # Phred
+params.maxEE = [5,5]
+params.trimLeft = dada_param$trimLeft
+params.trimRight = dada_param$trimRight
+params.truncLen = dada_param$truncLen
+
 
 println """\
          D A D A 2 - N F   P I P E L I N E
