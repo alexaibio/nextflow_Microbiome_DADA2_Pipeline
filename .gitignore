@@ -1,4 +1,4 @@
-.nextflow/*
+.nextflow/cache/*
 .nextflow.log*
 DATA/raw/*
 OUT/*
