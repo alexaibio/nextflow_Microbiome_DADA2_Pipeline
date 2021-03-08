@@ -1,5 +1,6 @@
 #!/usr/bin/env nextflow
 
+
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
@@ -24,16 +25,13 @@ if (params.help) {
     exit 0
 }
 
+// you can move it to config
 params.reads = "$baseDir/DATA/raw/*.{R1,R2}.fastq"
 params.outdir = "$baseDir/OUT/"
-params.FW_primer = "CCAGCAGCYGCGGTAAN" // -g - 5’ adapter  (front), forwardPrimer
-params.RV_primer = "CCGTCAATTCNTTTRAGT" //["CCGTCAATTCNTTTRAGT", "CCGTCAATTTCTTTGAGT", "CCGTCTATTCCTTTGANT"] // -G
 
-params.QUALITY_THRESHOLD = 18  # Phred
-params.maxEE = [5,5]
-params.trimLeft = dada_param$trimLeft
-params.trimRight = dada_param$trimRight
-params.truncLen = dada_param$truncLen
+
+
+
 
 
 println """\
@@ -47,24 +45,28 @@ println """\
          .stripIndent()
 
 
-ch_read_pairs = Channel.fromFilePairs(params.reads, checkIfExists: true)
-//ch_read_pairs.view()
+//ch_read_pairs = Channel.fromFilePairs(params.reads, checkIfExists: true)
+// we need two channels because we use it twice
+Channel
+    .fromFilePairs(params.reads, checkIfExists: true)
+    .into{ch_read_pairs1; ch_read_pairs2}
 
 
 
 /*
-    * Trim each read-pair with cutadapt
+* Trim each read-pair with cutadapt
+* TODO : add all adapters!
 */
 
 process trimming {
-    tag "Cutadapt to ${pair_id}"  
+    tag " Cutadapt to ${pair_id} "  
     publishDir "${params.outdir}", mode: 'symlink'
 
     input:
-    set val(pair_id), file(reads) from ch_read_pairs
+    tuple val(pair_id), path(reads) from ch_read_pairs1
 
     output:
-    set val(pair_id), file("0_trimmed/*.*") into ch_fastq_trimmed_manifest 
+    tuple val(pair_id), path("0_trimmed/*.*") into (ch_fastq_trimmed_manifest_1,  ch_fastq_trimmed_manifest_2)
     file "0_trimmed/*.*" into ch_fastq_trimmed_files
     //file "cutadapt_log_*.txt" into ch_fastq_cutadapt_log
 
@@ -78,18 +80,16 @@ process trimming {
 
 //ch_fastq_trimmed_manifest.view { "::::::: Manifest: " + it }
 
-// head(fnFs) head(fnRs) head(sample.names)
-// check if forward and reverse reads match
 
 process quality_fastqc{
-    tag "Quality of ${pair_id}"  
+    tag " Quality of ${pair_id} "  
     publishDir "${params.outdir}/1_fastQC", mode: 'symlink'
 
     input:
-    set val(pair_id), file(reads) from ch_fastq_trimmed_manifest
+    tuple val(pair_id), path(reads) from ch_fastq_trimmed_manifest_1
 
     output:
-    file "*_fastqc.{zip,html}" into ch_fastqc_results
+    path "*_fastqc.{zip,html}" into ch_fastqc_results
 
     script:
     """
@@ -99,3 +99,42 @@ process quality_fastqc{
 }
 
 
+
+
+process filterAndTrim {
+    tag " DADA trimming of ${pair_id} " 
+    publishDir "${params.outdir}/2_dada2-FilterAndTrim", mode: "link"
+
+    input:
+    set val(pair_id), file(reads) from ch_fastq_trimmed_manifest_2
+
+    output:
+    set val(pair_id), "*.R1.filtered.fastq.gz", "*.R2.filtered.fastq.gz" into filteredReads
+    file "*.R1.filtered.fastq.gz" into forReads
+    file "*.R2.filtered.fastq.gz" into revReads
+    file "*.trimmed.txt" into trimTracking
+
+    script:
+    """
+    #!/usr/bin/env Rscript
+    library(dada2); packageVersion("dada2")
+
+    out <- filterAndTrim(fwd = "${reads[0]}",
+                        filt = paste0("${pair_id}", ".R1.filtered.fastq.gz"),
+                        rev = "${reads[1]}",
+                        filt.rev = paste0("${pair_id}", ".R2.filtered.fastq.gz"),
+                        trimLeft = c(0,0),
+                        truncLen = c(${params.truncFor},${params.truncRev}),
+                        maxEE = c(${params.maxEEFor},${params.maxEERev}),
+                        truncQ = ${params.truncQ},  
+                        maxN = ${params.maxN},                      
+                        compress = TRUE,
+                        verbose = TRUE,
+                        multithread = 2)
+
+    write.csv(out, paste0("${pair_id}", ".trimmed.txt"))
+    """
+}
+
+
+// ERROR calculation
