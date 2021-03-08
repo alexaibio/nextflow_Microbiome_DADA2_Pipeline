@@ -1,9 +1,8 @@
 .nextflow/*
-.nextflow.log*
 DATA/raw/*
 OUT/*
 work/*
 
+.nextflow.log*
 *.log
 
-.nextflow/history
