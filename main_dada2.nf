@@ -31,16 +31,17 @@ params.outdir = "$baseDir/OUT/"
 
 
 
-
-
-
 println """\
-         D A D A 2 - N F   P I P E L I N E
-         ===================================
-         reads            : ${params.reads}
-         outdir           : ${params.outdir}
+         D A D A 2 - N F   P I P E L I N E - @Alex!!! 
+         ===========================================
+         reads folder     : ${params.reads}
+         out folder       : ${params.outdir}
+
          FW_primer        : ${params.FW_primer}
          RV_primer        : ${params.RV_primer}
+
+         Trunc-For/Rev    : ${params.truncFor}, ${params.truncRev}
+         maxEE            : ${params.maxEEFor}, ${params.maxEERev}
          """
          .stripIndent()
 
@@ -82,7 +83,7 @@ process trimming {
 
 
 process quality_fastqc{
-    tag " Quality of ${pair_id} "  
+    tag " Generate Quality reports for ${pair_id} "  
     publishDir "${params.outdir}/1_fastQC", mode: 'symlink'
 
     input:
@@ -102,7 +103,7 @@ process quality_fastqc{
 
 
 process filterAndTrim {
-    tag " DADA trimming of ${pair_id} " 
+    tag " DADA2: trimming/filtering of ${pair_id} " 
     publishDir "${params.outdir}/2_dada2-FilterAndTrim", mode: "link"
 
     input:
@@ -112,7 +113,7 @@ process filterAndTrim {
     set val(pair_id), "*.R1.filtered.fastq.gz", "*.R2.filtered.fastq.gz" into filteredReads
     file "*.R1.filtered.fastq.gz" into forReads
     file "*.R2.filtered.fastq.gz" into revReads
-    file "*.trimmed.txt" into trimTracking
+    file "*.trim_report.csv" into trimTracking  //trimmed.txt
 
     script:
     """
@@ -132,9 +133,66 @@ process filterAndTrim {
                         verbose = TRUE,
                         multithread = 2)
 
-    write.csv(out, paste0("${pair_id}", ".trimmed.txt"))
+    write.csv(out, paste0("${pair_id}", ".trim_report.csv"))
     """
 }
 
 
+// combine all individual trimming reports into one file for convinience
+process generateFilteringReport {
+    tag " Combining filtering report "
+    publishDir "${params.outdir}/2_dada2-FilterAndTrim", mode: "link"
+
+    // operator collects all the items emitted by a channel to a List and return as a sole emission
+    input:
+    file trimData from trimTracking.collect()
+
+    output:
+    file "all.trimmed.csv" into trimmedReadTracking
+
+    script:
+    """
+    #!/usr/bin/env Rscript
+    trimmedFiles <- list.files(path = '.', pattern = '*.trim_report.csv')
+    sample.names <- sub('.trim_report.csv', '', trimmedFiles)
+    trimmed <- do.call("rbind", lapply(trimmedFiles, function (x) as.data.frame(read.csv(x))))
+    colnames(trimmed)[1] <- "Sequence"
+    trimmed\$SampleID <- sample.names
+    write.csv(trimmed, "all.trimmed.csv", row.names = FALSE)
+    """
+}
+
+
+
 // ERROR calculation
+process LearnErrorsForward {
+    tag " DADA2: error rate calculation for Forward reads "
+    publishDir "${params.outdir}/3_dada2-LearnErrors", mode: "link"
+
+    input:
+    file fReads from forReads.collect()
+
+    output:
+    file "errorsF.RDS" into errorsFor
+
+    script:
+    """
+    #!/usr/bin/env Rscript
+    library(dada2);
+    packageVersion("dada2")
+
+    # File parsing
+    filtFs <- list.files('.', pattern="R1.filtered.fastq.gz", full.names = TRUE)
+    sample.namesF <- sapply(strsplit(basename(filtFs), "_"), `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
+    set.seed(100)
+
+    # Learn forward error rates
+    errF <- learnErrors(filtFs, nread=1e6, multithread=${task.cpus})
+    pdf("R1.err.pdf")
+    plotErrors(errF, nominalQ=TRUE)
+    dev.off()
+    saveRDS(errF, "errorsF.RDS")
+    """
+}
+
+

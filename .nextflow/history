@@ -75,3 +75,7 @@
 2021-03-08 23:34:07	24.1s	ridiculous_lovelace	OK	6023e79e540a87e76a73d05ba167846a	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
 2021-03-08 23:36:04	2.7s	evil_kalman	OK	daf07dfcbf71003da8ae679e7e3ac901	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
 2021-03-08 23:37:31	34.6s	serene_volhard	OK	8496638ba6677f5006c08b5d3621c958	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-09 12:44:57	2.6s	evil_euler	OK	39d4b0fe3d80cb6ef690c02c282a8fb0	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-09 12:46:36	2s	soggy_meucci	OK	fcc492446a2088146e51e6cc03ed8669	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-09 13:00:56	24.2s	nostalgic_jones	ERR	367cd6ff3058ea0ee82182d33a149e11	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-09 13:02:24	2s	chaotic_brattain	OK	ca6cde96d18ded540575a06a3dd6786a	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
