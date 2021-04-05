@@ -79,3 +79,37 @@
 2021-03-09 12:46:36	2s	soggy_meucci	OK	fcc492446a2088146e51e6cc03ed8669	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
 2021-03-09 13:00:56	24.2s	nostalgic_jones	ERR	367cd6ff3058ea0ee82182d33a149e11	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
 2021-03-09 13:02:24	2s	chaotic_brattain	OK	ca6cde96d18ded540575a06a3dd6786a	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:26:29	-	voluminous_almeida	-	da8cad9b7a79f3e82f64a662485e67ab	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:29:46	-	mad_baekeland	-	f101e837616a3954065d802f0d69225a	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:30:23	1m 16s	deadly_nobel	OK	da0a1e0be70661f0cbbff485947e85db	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:32:50	1.8s	jovial_kowalevski	OK	121f12f7a1378a398a74268e956d1377	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:38:17	7.7s	sharp_koch	ERR	d9089cb6d0fbb93ea23d30c48b247f8f	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:42:16	2.2s	nasty_mandelbrot	OK	747422823e20946b764869828408475b	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:46:01	4.8s	boring_banach	ERR	19708742b887f1943e53e63a484d5231	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:49:25	2.9s	clever_murdock	ERR	963e0bae354f12005015f5d2f71c645f	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 22:57:28	2.7s	romantic_banach	ERR	b7be1706df5a988a8ba82a0a7d7670c3	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 23:03:17	2.1s	shrivelled_ampere	ERR	ff27b3bdf95a2ad49f0533b08782a236	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-10 23:12:00	1m 39s	awesome_ride	OK	7a9de2d951cae848ed7a57457c4080ad	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:06:15	46.1s	tiny_bell	OK	295c578838a858b0a4e9e191f12856e1	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:12:16	9.6s	gloomy_minsky	ERR	48170f9fca011cf304e3558a8f4d523b	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:13:38	10.1s	marvelous_stallman	ERR	b320db2f85ccd50b4c8923e07f8259a9	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:43:39	37.3s	high_tesla	OK	7849605d984d01b447d2d6f7f63d6107	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:48:11	9.9s	gloomy_cajal	ERR	835884b9e2d041c5db3dcf420d900755	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:55:11	9.7s	adoring_cori	ERR	835884b9e2d041c5db3dcf420d900755	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:55:44	9.5s	nostalgic_majorana	ERR	1924cb6bb6a3ca6eacbf6fdd470e0580	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 22:56:29	2.8s	desperate_dalembert	OK	7849605d984d01b447d2d6f7f63d6107	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 23:01:00	38.9s	stoic_snyder	OK	70976b0ccee004b192eee0157155e5bb	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-12 23:08:57	54.9s	zen_heyrovsky	ERR	e635573504d8d4bb72f4c94b63771e96	7b5e033f-b552-4ab0-8e3b-43d109dbe853	nextflow run main_dada2.nf -resume
+2021-03-22 22:37:17	-	tiny_lamarck	-	6753e88e31788f25484ca9d7f907344a	9de7a3fa-0ba8-453c-96b1-0d28dcdcaadb	nextflow run main_dada2.nf
+2021-03-22 22:38:05	1.9s	exotic_solvay	ERR	6d56209a64f15f60ff1aacf656d9eb8c	546d9ea3-faf7-4f85-afd4-6bfab4266015	nextflow run main_dada2.nf
+2021-03-22 22:39:36	2m 8s	distraught_kare	ERR	6d56209a64f15f60ff1aacf656d9eb8c	98043718-b2ab-4160-a27a-3dd4fadab0b9	nextflow run main_dada2.nf
+2021-03-22 22:42:34	-	drunk_descartes	-	6d56209a64f15f60ff1aacf656d9eb8c	d96f9532-7b06-4a7a-84c5-edf589fb8ecb	nextflow run main_dada2.nf
+2021-03-22 22:43:51	-	lonely_goldberg	-	6d56209a64f15f60ff1aacf656d9eb8c	6b598b0b-a6d0-48f0-9ef9-0ef7c5c50766	nextflow run main_dada2.nf
+2021-04-05 21:33:17	-	desperate_linnaeus	-	d5982c5b112da18a7cbffea8c23f4d50	1d6923b0-a7fa-4ffb-87be-4b3bc33381ec	nextflow run main_dada2.nf
+2021-04-05 21:34:12	1.6s	trusting_volhard	ERR	d5982c5b112da18a7cbffea8c23f4d50	bd46e366-69b6-463a-97b5-bcb956be96a1	nextflow run main_dada2.nf
+2021-04-05 21:35:36	2.8s	deadly_liskov	ERR	d5982c5b112da18a7cbffea8c23f4d50	3990cccf-1328-484b-b2d8-81783685887c	nextflow run main_dada2.nf
+2021-04-05 21:37:39	2.6s	gloomy_legentil	ERR	e06780c88cf6f53acd684dc81d79b6d0	84581501-7b9c-4fe5-bd6b-4e503fd226e4	nextflow run main_dada2.nf
+2021-04-05 21:38:18	2.6s	ecstatic_caravaggio	ERR	e06780c88cf6f53acd684dc81d79b6d0	5edd80e3-c856-4d66-a1df-1fcc37ef58bf	nextflow run main_dada2.nf
+2021-04-05 21:56:12	2.7s	awesome_brown	ERR	8ee4b3d4642918ad088307771a1d927f	dc8a8df4-91cf-4685-983b-eb3fa4281b01	nextflow run main_dada2.nf
+2021-04-05 21:56:55	2m 20s	shrivelled_fermat	ERR	8ee4b3d4642918ad088307771a1d927f	e42dbd3e-cf78-4810-a9e9-da7b550909d4	nextflow run main_dada2.nf
+2021-04-05 22:03:28	1m 3s	gloomy_hawking	OK	37f4472cb1d703e24d534c8fa009e0dc	e42dbd3e-cf78-4810-a9e9-da7b550909d4	nextflow run main_dada2.nf -resume

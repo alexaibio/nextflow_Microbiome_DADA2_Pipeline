@@ -1,5 +1,4 @@
 .nextflow/*
-.nextflow/history
 DATA/raw/*
 OUT/*
 work/*

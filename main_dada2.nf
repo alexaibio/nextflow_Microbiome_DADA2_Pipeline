@@ -1,6 +1,5 @@
 #!/usr/bin/env nextflow
 
-
 def helpMessage() {
     log.info nfcoreHeader()
     log.info"""
@@ -25,11 +24,6 @@ if (params.help) {
     exit 0
 }
 
-// you can move it to config
-params.reads = "$baseDir/DATA/raw/*.{R1,R2}.fastq"
-params.outdir = "$baseDir/OUT/"
-
-
 
 println """\
          D A D A 2 - N F   P I P E L I N E - @Alex!!! 
@@ -37,31 +31,27 @@ println """\
          reads folder     : ${params.reads}
          out folder       : ${params.outdir}
 
-         FW_primer        : ${params.FW_primer}
-         RV_primer        : ${params.RV_primer}
+         FW_primers       : ${params.FW_primer}
+         RV_primers       : ${params.RV_primer}
 
          Trunc-For/Rev    : ${params.truncFor}, ${params.truncRev}
          maxEE            : ${params.maxEEFor}, ${params.maxEERev}
+         TODO             : add more...
          """
          .stripIndent()
 
 
-//ch_read_pairs = Channel.fromFilePairs(params.reads, checkIfExists: true)
-// we need two channels because we use it twice
+// Create channels with reads: we need two channels because we use it twice. Obsolete in DSL2
 Channel
     .fromFilePairs(params.reads, checkIfExists: true)
     .into{ch_read_pairs1; ch_read_pairs2}
 
 
 
-/*
-* Trim each read-pair with cutadapt
-* TODO : add all adapters!
-*/
-
-process trimming {
+// Trim each read-pair with cutadapt
+process cut_primers {
     tag " Cutadapt to ${pair_id} "  
-    publishDir "${params.outdir}", mode: 'symlink'
+    publishDir "${params.outdir}/0_trimmed", mode: 'symlink'
 
     input:
     tuple val(pair_id), path(reads) from ch_read_pairs1
@@ -69,20 +59,21 @@ process trimming {
     output:
     tuple val(pair_id), path("0_trimmed/*.*") into (ch_fastq_trimmed_manifest_1,  ch_fastq_trimmed_manifest_2)
     file "0_trimmed/*.*" into ch_fastq_trimmed_files
-    //file "cutadapt_log_*.txt" into ch_fastq_cutadapt_log
+    file "cutadapt_log_*.txt" into ch_fastq_cutadapt_log
 
     script:
+    // Note: I moved -g into ${params.FW_primer} itself, a bad desicion, better use fasta file 
     """
     mkdir -p 0_trimmed
-    cutadapt -g ${params.FW_primer} -G ${params.RV_primer}  \
-        -o 0_trimmed/${reads[0]} -p 0_trimmed/${reads[1]} ${reads[0]} ${reads[1]} > cutadapt_log_${pair_id}.txt
+    cutadapt ${params.FW_primer} ${params.RV_primer}  \
+        -o 0_trimmed/${reads[0]} -p 0_trimmed/${reads[1]} \
+        ${reads[0]} ${reads[1]} > cutadapt_log_${pair_id}.txt
     """
 }
 
-//ch_fastq_trimmed_manifest.view { "::::::: Manifest: " + it }
 
-
-process quality_fastqc{
+// it is also possible to use multiqc, not fastqc! 
+process initial_quality_fastqc{
     tag " Generate Quality reports for ${pair_id} "  
     publishDir "${params.outdir}/1_fastQC", mode: 'symlink'
 
@@ -100,9 +91,30 @@ process quality_fastqc{
 }
 
 
+process initial_quality_multiqc {
+    tag " MultiQC combined report " 
+    publishDir "${params.outdir}/1_multiQC", mode:'copy'  // or symlink?
+       
+    input:
+    path '*' from ch_fastq_cutadapt_log.mix(ch_fastqc_results).collect()
+    
+    output:
+    path 'multiqc_report.html'
+     
+    script:
+    """
+    multiqc . 
+    """
+} 
 
+
+
+
+// ******* START PROCESSING  **********
 
 process filterAndTrim {
+    cpus 4
+
     tag " DADA2: trimming/filtering of ${pair_id} " 
     publishDir "${params.outdir}/2_dada2-FilterAndTrim", mode: "link"
 
@@ -131,7 +143,7 @@ process filterAndTrim {
                         maxN = ${params.maxN},                      
                         compress = TRUE,
                         verbose = TRUE,
-                        multithread = 2)
+                        multithread = ${task.cpus})
 
     write.csv(out, paste0("${pair_id}", ".trim_report.csv"))
     """
@@ -166,6 +178,8 @@ process generateFilteringReport {
 
 // ERROR calculation
 process LearnErrorsForward {
+    cpus 4
+
     tag " DADA2: error rate calculation for Forward reads "
     publishDir "${params.outdir}/3_dada2-LearnErrors", mode: "link"
 
@@ -174,6 +188,7 @@ process LearnErrorsForward {
 
     output:
     file "errorsF.RDS" into errorsFor
+    file "R1.err.pdf"
 
     script:
     """
@@ -181,18 +196,97 @@ process LearnErrorsForward {
     library(dada2);
     packageVersion("dada2")
 
-    # File parsing
-    filtFs <- list.files('.', pattern="R1.filtered.fastq.gz", full.names = TRUE)
-    sample.namesF <- sapply(strsplit(basename(filtFs), "_"), `[`, 1) # Assumes filename = samplename_XXX.fastq.gz
-    set.seed(100)
-
     # Learn forward error rates
-    errF <- learnErrors(filtFs, nread=1e6, multithread=${task.cpus})
-    pdf("R1.err.pdf")
+    filtFs <- strsplit('${fReads}', split = ' ')[[1]]
+    errF <- learnErrors(filtFs, nbases=1e8, multithread=${task.cpus}, randomize=TRUE, verbose=1, MAX_CONSIST=20)
+    
+    pdf(file="R1.err.pdf")
     plotErrors(errF, nominalQ=TRUE)
     dev.off()
+
     saveRDS(errF, "errorsF.RDS")
     """
 }
 
+process LearnErrorsReverse {
+    cpus 4
+
+    tag " DADA2: error rate calculation for Reverse reads "
+    publishDir "${params.outdir}/3_dada2-LearnErrors", mode: "link"
+
+    input:
+    file rReads from revReads.collect()
+
+    output:
+    file "errorsR.RDS" into errorsRev
+    file "R2.err.pdf"
+
+    script:
+    """
+    #!/usr/bin/env Rscript
+    library(dada2);
+    packageVersion("dada2")
+
+    # Learn forward error rates
+    filtRs <- strsplit('${rReads}', split = ' ')[[1]]
+    errR <- learnErrors(filtRs, nbases=1e8, multithread=${task.cpus}, randomize=TRUE, verbose=1, MAX_CONSIST=20)
+    
+    pdf(file="R2.err.pdf")
+    plotErrors(errR, nominalQ=TRUE)
+    dev.off()
+
+    saveRDS(errR, "errorsR.RDS")
+    """
+}
+
+
+// Dereplication and sample inference
+
+// for (sam in sample.names)
+
+process LearnErrorsReverse {
+    cpus 4
+
+    tag " DADA2: Dereplication and sample inference "
+    publishDir "${params.outdir}/4_dada2-sample_inference", mode: "link"
+
+    input:
+
+    output:
+
+
+    script:
+    """
+    derepF <- derepFastq(filtFs[[sam]])
+    derepR <- derepFastq(filtRs[[sam]])
+    
+    ### SAMPLE INFERENCE 
+    dadaF <- dada(derepF, err=errF, pool=TRUE, multithread = TRUE)
+    dadaR <- dada(derepR, err=errR, pool=TRUE, multithread = TRUE)
+    
+    ### Merge forward and reverse reads
+    # NOTE if merger is zero, it means your reads aren't overlapping after truncation - check trimming
+    # mergePairs requires 20 nts of overlap by default
+    # https://github.com/benjjneb/dada2/issues/419
+    merger <- dada2::mergePairs(dadaF, derepF, dadaR, derepR)
+    
+    if (length(merger$sequence)==0){
+        print(" !!!!!  You have a PROBLEM !!!!!! ")
+        print("  Forward and Revers reads are not overlapping during merging! Please check trimming parameters!")
+        print(" justConcatenate=TRUE has been used for this sample")
+        merger <- dada2::mergePairs(dadaF, derepF, dadaR, derepR, justConcatenate=TRUE)  
+        }
+    mergers[[sam]] <- merger
+    
+    # add number of merged sequences to a filter.log
+    filter.log[sam,"merged"] <- length(merger$sequence)
+    
+    counter <- counter + 1
+    cat("   ::SAMPLE #", counter, "Done...", sam, ":", length(merger$sequence),  " merged sequences.")
+
+    
+    
+    """
+
+}
 
