@@ -1,4 +1,6 @@
 #!/usr/bin/env nextflow
+nextflow.enable.dsl=2
+
 
 def helpMessage() {
     log.info nfcoreHeader()
@@ -44,7 +46,7 @@ println """\
 // Create channels with reads: we need two channels because we use it twice. Obsolete in DSL2
 Channel
     .fromFilePairs(params.reads, checkIfExists: true)
-    .into{ch_read_pairs1; ch_read_pairs2}
+    .set{ch_read_pairs}
 
 
 
@@ -54,12 +56,12 @@ process cut_primers {
     publishDir "${params.outdir}/0_trimmed", mode: 'symlink'
 
     input:
-    tuple val(pair_id), path(reads) from ch_read_pairs1
+    tuple val(pair_id), path(reads)
 
     output:
-    tuple val(pair_id), path("0_trimmed/*.*") into (ch_fastq_trimmed_manifest_1,  ch_fastq_trimmed_manifest_2)
-    file "0_trimmed/*.*" into ch_fastq_trimmed_files
-    file "cutadapt_log_*.txt" into ch_fastq_cutadapt_log
+    tuple val(pair_id), path("0_trimmed/*.*")
+    file "0_trimmed/*.*" 
+    file "cutadapt_log_*.txt"
 
     script:
     // Note: I moved -g into ${params.FW_primer} itself, a bad desicion, better use fasta file 
@@ -78,10 +80,10 @@ process initial_quality_fastqc{
     publishDir "${params.outdir}/1_fastQC", mode: 'symlink'
 
     input:
-    tuple val(pair_id), path(reads) from ch_fastq_trimmed_manifest_1
+    tuple val(pair_id), path(reads)
 
     output:
-    path "*_fastqc.{zip,html}" into ch_fastqc_results
+    path "*_fastqc.{zip,html}"
 
     script:
     """
@@ -96,7 +98,7 @@ process initial_quality_multiqc {
     publishDir "${params.outdir}/1_multiQC", mode:'copy'  // or symlink?
        
     input:
-    path '*' from ch_fastq_cutadapt_log.mix(ch_fastqc_results).collect()
+    path '*'
     
     output:
     path 'multiqc_report.html'
@@ -119,13 +121,13 @@ process filterAndTrim {
     publishDir "${params.outdir}/2_dada2-FilterAndTrim", mode: "link"
 
     input:
-    set val(pair_id), file(reads) from ch_fastq_trimmed_manifest_2
+    tuple val(pair_id), file(reads)
 
     output:
-    set val(pair_id), "*.R1.filtered.fastq.gz", "*.R2.filtered.fastq.gz" into filteredReads
-    file "*.R1.filtered.fastq.gz" into forReads
-    file "*.R2.filtered.fastq.gz" into revReads
-    file "*.trim_report.csv" into trimTracking  //trimmed.txt
+    tuple val(pair_id), path("*.R1.filtered.fastq.gz"), path("*.R2.filtered.fastq.gz")
+    file "*.R1.filtered.fastq.gz"
+    file "*.R2.filtered.fastq.gz"
+    file "*.trim_report.csv" 
 
     script:
     """
@@ -157,10 +159,10 @@ process generateFilteringReport {
 
     // operator collects all the items emitted by a channel to a List and return as a sole emission
     input:
-    file trimData from trimTracking.collect()
+    file trimData
 
     output:
-    file "all.trimmed.csv" into trimmedReadTracking
+    file "all.trimmed.csv"
 
     script:
     """
@@ -184,10 +186,10 @@ process LearnErrorsForward {
     publishDir "${params.outdir}/3_dada2-LearnErrors", mode: "link"
 
     input:
-    file fReads from forReads.collect()
+    file fReads
 
     output:
-    file "errorsF.RDS" into errorsFor
+    file "errorsF.RDS"
     file "R1.err.pdf"
 
     script:
@@ -215,10 +217,10 @@ process LearnErrorsReverse {
     publishDir "${params.outdir}/3_dada2-LearnErrors", mode: "link"
 
     input:
-    file rReads from revReads.collect()
+    file rReads
 
     output:
-    file "errorsR.RDS" into errorsRev
+    file "errorsR.RDS"
     file "R2.err.pdf"
 
     script:
@@ -244,7 +246,7 @@ process LearnErrorsReverse {
 
 // for (sam in sample.names)
 
-process LearnErrorsReverse {
+process sampleInference {
     cpus 4
 
     tag " DADA2: Dereplication and sample inference "
@@ -280,3 +282,19 @@ process LearnErrorsReverse {
 
 }
 
+
+
+workflow {
+    cut_primers(ch_read_pairs)  // out: tuple ch_fastq_trimmed_manifest, files ch_fastq_trimmed_files, ch_fastq_cutadapt_log
+    
+    initial_quality_fastqc(cut_primers.out[0]) //out: ch_fastqc_results
+    initial_quality_multiqc(cut_primers.out[2].mix(initial_quality_fastqc.out).collect())
+
+    filterAndTrim(cut_primers.out[0]) // out: filteredReads
+    generateFilteringReport(filterAndTrim.out[3].collect())  // out: trimmedReadTracking
+
+    LearnErrorsForward(filterAndTrim.out[1].collect())  // out: errorsFor
+    LearnErrorsReverse(filterAndTrim.out[2].collect())  // out: errorsRev
+
+
+}
